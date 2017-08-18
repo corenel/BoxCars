@@ -126,16 +126,19 @@ def eval(args, dataset, model, image):
     print("fps: {}".format(fps))
 
     # print predictions
+    pred = np.squeeze(pred)
+    print(pred.shape)
     pred_top5 = pred.argsort()[-5:][::-1]
+    print(pred_top5.shape)
     for pred_idx in pred_top5:
         cls_name = dataset.get_name_of_classes(pred_idx)
-        cls_prob = pred[0, pred_idx]
+        cls_prob = pred[pred_idx]
         print("[{}]:name=[{}], prob={}".format(pred_idx, cls_name, cls_prob))
 
 
 if __name__ == "__main__":
     args = parse_args(["ResNet50", "VGG16", "VGG19", "InceptionV3"])
-    dataset, model = init(args)
+    model, dataset = init(args)
 
     if args.demo is not None and os.path.exists(args.demo):
         print(args.demo)
@@ -159,7 +162,7 @@ if __name__ == "__main__":
                 break
         # Break the loop
         else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
     # When everything done, release the video capture object
     cap.release()
