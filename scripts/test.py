@@ -10,7 +10,7 @@ import time
 import sys
 import numpy as np
 
-from scipy.misc import imsave
+from scipy.misc import imsave, imread, imresize
 
 from boxcars_dataset import BoxCarsDataset
 from boxcars_data_generator import BoxCarsDataGenerator
@@ -90,18 +90,24 @@ eval_steps = 1
 print("Running evaluation...")
 dataset.initialize_data("test")
 
-idx = np.random.randint(0, 39000)
-vehicle_id, instance_id = dataset.X["test"][idx]
-vehicle, instance, bb3d = dataset.get_vehicle_instance_data(vehicle_id, instance_id)
-print('vehicle_id={}, instance_id={}'.format(vehicle_id, instance_id))
-print('real type is'
-      ' [{}]'.format(
-          dataset.get_name_of_classes(np.nonzero(dataset.Y["test"][idx])[0][0])
+if args.test is not None:
+    assert(os.path.exists(args.test))
+    image = imread(args.test)
+    image = imresize(image, (224, 224))
+else:
+    idx = np.random.randint(0, 39000)
+    vehicle_id, instance_id = dataset.X["test"][idx]
+    vehicle, instance, bb3d = dataset.get_vehicle_instance_data(vehicle_id, instance_id)
+    print('vehicle_id={}, instance_id={}'.format(vehicle_id, instance_id))
+    print('real type is'
+          ' [{}]'.format(
+              dataset.get_name_of_classes(np.nonzero(dataset.Y["test"][idx])[0][0])
+              )
           )
-      )
-image = dataset.get_image(vehicle_id, instance_id)
-imsave('pred.png', image)
-image = unpack_3DBB(image, bb3d)
+    image = dataset.get_image(vehicle_id, instance_id)
+    imsave('pred.png', image)
+    image = unpack_3DBB(image, bb3d)
+
 image = (image.astype(np.float32) - 116)/128.
 image = np.array([image])
 

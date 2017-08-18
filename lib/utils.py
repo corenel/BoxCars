@@ -42,8 +42,9 @@ def parse_args(available_nets):
     parser.add_argument("--epochs", type=int, default=20, help="run for epochs")
     parser.add_argument("--cache", type=str, default=default_cache, help="where to store training meta-data and final model")
     parser.add_argument("--estimated-3DBB", type=str, default=None, help="use estimated 3DBBs from specified path")
-    
-    
+    parser.add_argument("--test", type=str, default=None, help="image to be test")
+
+
     args = parser.parse_args()
     assert args.eval is None or args.resume is None, "--eval and --resume are mutually exclusive"
     if args.eval is None and args.resume is None:
@@ -51,7 +52,7 @@ def parse_args(available_nets):
 
     return args
 
- 
+
 #%%
 def download_report_hook(block_num, block_size, total_size):
     downloaded = block_num*block_size
