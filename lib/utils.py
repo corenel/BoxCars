@@ -43,6 +43,7 @@ def parse_args(available_nets):
     parser.add_argument("--cache", type=str, default=default_cache, help="where to store training meta-data and final model")
     parser.add_argument("--estimated-3DBB", type=str, default=None, help="use estimated 3DBBs from specified path")
     parser.add_argument("--test", type=str, default=None, help="image to be test")
+    parser.add_argument("--test-idx", type=int, default=None, help="image index to be test")
 
 
     args = parser.parse_args()

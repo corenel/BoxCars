@@ -95,7 +95,10 @@ if args.test is not None:
     image = imread(args.test)
     image = imresize(image, (224, 224))
 else:
-    idx = np.random.randint(0, 39000)
+    if args.test_idx is not None:
+        idx = args.test_idx
+    else:
+        idx = np.random.randint(0, 39000)
     vehicle_id, instance_id = dataset.X["test"][idx]
     vehicle, instance, bb3d = dataset.get_vehicle_instance_data(vehicle_id, instance_id)
     print('vehicle_id={}, instance_id={}'.format(vehicle_id, instance_id))
