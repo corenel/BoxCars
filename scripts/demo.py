@@ -108,9 +108,10 @@ def init(args):
 def eval(args, dataset, model, image):
     """Evaluate the model."""
 
-    start_time = time.time()
+    # start_time = time.time()
 
     # image pre-processing
+    proceed_frame = image.copy()
     image = imresize(image, (224, 224))
     image = (image.astype(np.float32) - 116) / 128.
     image = np.array([image])
@@ -118,22 +119,32 @@ def eval(args, dataset, model, image):
     pred = model.predict(image)
 
     # clena the terminal
-    print("\033c")
+    # print("\033c")
 
     # print fps
-    elapsed_time = time.time() - start_time
-    fps = 1000. / elapsed_time
-    print("fps: {}".format(fps))
+    # elapsed_time = time.time() - start_time
+    # fps = 1000. / elapsed_time
+    # print("fps: {}".format(fps))
 
     # print predictions
     pred = np.squeeze(pred)
-    print(pred.shape)
+    # print(pred.shape)
     pred_top5 = pred.argsort()[-5:][::-1]
-    print(pred_top5.shape)
-    for pred_idx in pred_top5:
+    # print(pred_top5.shape)
+    for idx, pred_idx in enumerate(pred_top5):
         cls_name = dataset.get_name_of_classes(pred_idx)
         cls_prob = pred[pred_idx]
-        print("[{}]:name=[{}], prob={}".format(pred_idx, cls_name, cls_prob))
+        # print("[{}]:name=[{}], prob={}".format(pred_idx, cls_name, cls_prob))
+        if cls_prob > 0.2:
+            cv2.putText(proceed_frame,
+                        "[{}]:[{:15s}], prob={:.4f}".format(idx,
+                                                            cls_name,
+                                                            cls_prob, ".5f"),
+                        (20, 800 + 20 * idx),
+                        cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                        1, (0, 0, 0), 2)
+
+    return proceed_frame
 
 
 if __name__ == "__main__":
@@ -144,28 +155,44 @@ if __name__ == "__main__":
         print(args.demo)
         cap = cv2.VideoCapture(args.demo)
 
-    # Check if camera opened successfully
-    if (cap.isOpened() is False):
-        print("Error opening video stream or file")
+        # Check if camera opened successfully
+        if (cap.isOpened() is False):
+            print("Error opening video stream or file")
 
-    # Read until video is completed
-    while(cap.isOpened()):
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-        if ret is True:
-            # Display the resulting frame
-            # cv2.imshow('Frame', frame)
-            eval(args, dataset, model, frame)
+        # Default resolutions of the frame are obtained.
+        # The default resolutions are system dependent.
+        # We convert the resolutions from float to integer.
+        frame_width = int(cap.get(3))
+        frame_height = int(cap.get(4))
 
-            # Press Q on keyboard to  exit
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+        # Define the codec and create VideoWriter object.
+        # The output is stored in 'outpy.avi' file.
+        out = cv2.VideoWriter('pred.mp4', cv2.VideoWriter_fourcc(
+            'X', '2', '6', '4'), 10, (frame_width, frame_height))
+
+        # Read until video is completed
+        while(cap.isOpened()):
+            # Capture frame-by-frame
+            ret, frame = cap.read()
+            if ret is True:
+                # Display the resulting frame
+                # cv2.imshow('Frame', frame)
+                proceed_frame = eval(args, dataset, model, frame)
+
+                # Write the frame into the file 'output.avi'
+                out.write(proceed_frame)
+
+                # Press Q on keyboard to  exit
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            # Break the loop
+            else:
+                # cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 break
-        # Break the loop
-        else:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    # When everything done, release the video capture object
-    cap.release()
+        # When everything done, release the video capture object
+        cap.release()
+        out.release()
 
-    # Closes all the frames
-    # cv2.destroyAllWindows()
+        # Closes all the frames
+        cv2.destroyAllWindows()
